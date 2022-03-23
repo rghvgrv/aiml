@@ -1,0 +1,84 @@
+h1={
+    'A':1,
+    'B':6,
+    'C':2,
+    'D':12,
+    'E':2,
+    'F':1,
+    'G':5,
+    'H':7,
+    'I':7,
+    'J':1
+}
+
+graph={
+    'A':[[('B',1),('C',1)],[('D',1)]],
+    'B':[[('G',1)],[('H',1)]],
+    'C':[[('J',1)]],
+    'D':[[('E',1),('F',1)]],
+    'G':[[('I',1)]]
+}
+
+solutionGraph={}
+parents={}
+status={}
+start='A'
+
+def setstatus(v,val):
+    status[v]=val
+def getstatus(v):
+    return status.get(v,0)
+def setheuristic(v,val):
+    h1[v]=val
+def getheuristic(v):
+    return h1[v]
+def getneighbors(v):
+    return graph.get(v,'')
+
+def costToMinChild(v):
+    mincost=0
+    childListDict={}
+    childListDict[mincost]=[]
+    flag=True
+    for childListTuple in getneighbors(v):
+        cost=0
+        childlist=[]
+        for m,weight in childListTuple:
+            cost+=getheuristic(m)+weight
+            childlist.append(m)
+        if flag==True:
+            mincost=cost
+            childListDict[mincost]=childlist
+            flag=False
+        else:
+            if mincost>cost:
+                mincost=cost
+                childListDict[mincost]=childlist
+    return mincost,childListDict[mincost]
+    
+def aostar(v,backTracking):
+    print('heuristic val: ',h1)
+    print('processing node: ',v)
+    print('solution graph: ',solutionGraph)
+    print('--------------------------')
+    if getstatus(v)>=0:
+        mincost,childlist=costToMinChild(v)
+        setheuristic(v,mincost)
+        setstatus(v,len(childlist))
+        solved=True  
+        for child in childlist:
+            parents[child]=v
+            if getstatus(child)!=-1:
+                solved=False      
+        if solved==True:
+            setstatus(v,-1)
+            solutionGraph[v]=childlist       
+        if v!=start:
+            aostar(parents[v],True)        
+        if backTracking==False:
+            for child in childlist:
+                setstatus(child,0)
+                aostar(child,False)
+                
+aostar('A',False)
+print(solutionGraph)

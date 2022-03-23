@@ -1,0 +1,54 @@
+import pandas as pd
+import numpy as np
+import math
+
+dataset=pd.read_csv('4.csv')
+
+def entropy(p):
+    return sum([-i*math.log(i,2) for i in p])
+
+from collections import Counter
+def entropy_of_list(a_list):
+    cnt=Counter(x for x in a_list)
+    print('No and Yes classes are:',a_list.name,cnt)
+    n=len(a_list)*1.0
+    p=[x/n for x in cnt.values()]
+    print(p)
+    return entropy(p)
+
+def information_gain(df,independent,dependent,trace=0):
+    print("Information gain calculation of",independent)
+    df_split=df.groupby(independent)
+    for name,group in df_split:
+        print(name)
+        print(group)
+    nobs=len(df.index)*1.0
+    df_agg_ent=df_split.agg({dependent:[entropy_of_list,lambda x:len(x)/nobs]})[dependent]
+    df_agg_ent.columns=['entropy','propobservations']
+    new_entropy=sum(df_agg_ent['entropy']*df_agg_ent['propobservations'])
+    old_entropy=entropy_of_list(df[dependent])
+    return old_entropy-new_entropy
+
+print("Total entropy of given EnjoySport in dataset: ",entropy_of_list(dataset['answer']))
+print('Information gain for outlook is:'+str(information_gain(dataset,'outlook','answer')),"\n")
+print('Information gain for humidity is:'+str(information_gain(dataset,'humidity','answer')),"\n")
+print('Information gain for wind is:'+str(information_gain(dataset,'wind','answer')),"\n")
+print('Information gain for temperature is:'+str(information_gain(dataset,'temperature','answer')),"\n")
+
+#prediction part
+
+x=dataset.iloc[:,:-1]
+y=dataset.iloc[:,-1]
+
+from sklearn.preprocessing import LabelEncoder
+LE_x=LabelEncoder()
+x=x.apply(LabelEncoder().fit_transform)
+
+from sklearn.tree import DecisionTreeClassifier
+regressor=DecisionTreeClassifier()
+regressor.fit(x,y)
+
+x_in=np.array([2,1,0,1])
+y_pred=regressor.predict([x_in])
+
+print("Can Tennis be played for the given sample: ",y_pred)
